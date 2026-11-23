@@ -1,5 +1,5 @@
 // Object2.cpp - Генератор матриці
-
+// За командою Lab6 генерує матрицю n×n та записує її у Clipboard
 
 #include <windows.h>
 #include <stdio.h>
@@ -12,7 +12,9 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "kernel32.lib")
 
-
+// ============================================================================
+// ГЛОБАЛЬНІ ЗМІННІ
+// ============================================================================
 
 const char g_szWindowClass[] = "OBJECT2_MAIN";
 const char g_szAppTitle[] = "Object2 - Matrix Generator";
@@ -25,7 +27,9 @@ int g_nSize = 0;
 int g_nMinValue = -100;
 int g_nMaxValue = 100;
 
-
+// ============================================================================
+// ФУНКЦІЇ РОБОТИ З МАТРИЦЕЮ
+// ============================================================================
 
 void GenerateMatrix(int n, int minVal, int maxVal)
 {
@@ -40,12 +44,12 @@ void GenerateMatrix(int n, int minVal, int maxVal)
 	g_nMinValue = minVal;
 	g_nMaxValue = maxVal;
 
-
+	// Виділити пам'ять
 	g_matrix = new int*[n];
 	for (int i = 0; i < n; i++)
 		g_matrix[i] = new int[n];
 
-
+	// Генерувати випадкові числа
 	srand((unsigned)time(NULL));
 	for (int i = 0; i < n; i++)
 	{
@@ -60,11 +64,11 @@ void MatrixToClipboard(HWND hWnd)
 {
 	if (!g_matrix) return;
 
-
+	// Сформувати текстовий формат матриці
 	char buffer[65536];
 	int offset = 0;
 
-
+	// Першу лінію - розмір матриці
 	offset += sprintf_s(buffer + offset, sizeof(buffer) - offset, "%d\n", g_nSize);
 
 	// Дані матриці
@@ -78,7 +82,7 @@ void MatrixToClipboard(HWND hWnd)
 		offset += sprintf_s(buffer + offset, sizeof(buffer) - offset, "\n");
 	}
 
-	
+	// Записати у Clipboard
 	PutTextToClipboard(hWnd, buffer);
 }
 
@@ -91,7 +95,9 @@ void DisplayMatrix(HWND hWnd)
 	UpdateWindow(hWnd);
 }
 
-
+// ============================================================================
+// ОБРОБНИК ПОВІДОМЛЕНЬ
+// ============================================================================
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -107,14 +113,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			int wmId = LOWORD(wParam);
 
-			
+			// WM_COMMAND 10000 - повідомлення від менеджера з його HWND
 			if (wmId == 10000)
 			{
 				g_hWndManager = (HWND)lParam;
 				return 0;
 			}
 
-			
+			// WM_COMMAND 10001 - розмір матриці
 			if (wmId == 10001)
 			{
 				int size = (int)lParam;
@@ -122,7 +128,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				MatrixToClipboard(hWnd);
 				DisplayMatrix(hWnd);
 
-				
+				// Повідомити менеджеру, що матриця готова
 				if (g_hWndManager)
 				{
 					PostMessage(g_hWndManager, WM_COMMAND, 10000, (LPARAM)10000);
@@ -146,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			int y = 40;
 
-			
+			// Вивести матрицю
 			if (g_matrix)
 			{
 				for (int i = 0; i < g_nSize && y < 400; i++)
@@ -201,7 +207,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-
+// ============================================================================
+// ТОЧКА ВХОДУ
+// ============================================================================
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
 				   LPSTR lpCmdLine, int nCmdShow)

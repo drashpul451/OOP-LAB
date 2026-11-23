@@ -12,7 +12,9 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "kernel32.lib")
 
-
+// ============================================================================
+// ГЛОБАЛЬНІ ЗМІННІ
+// ============================================================================
 
 const char g_szWindowClass[] = "OBJECT3_MAIN";
 const char g_szAppTitle[] = "Object3 - Determinant Calculator";
@@ -24,8 +26,11 @@ double **g_matrix = NULL;
 int g_nSize = 0;
 double g_dDeterminant = 0.0;
 
+// ============================================================================
+// ФУНКЦІЇ РОБОТИ З МАТРИЦЕЮ ТА ДЕТЕРМІНАНТОМ
+// ============================================================================
 
-
+// Глибока копія матриці для обчислення
 double** CopyMatrix(double **src, int n)
 {
 	double **dest = new double*[n];
@@ -48,7 +53,7 @@ void FreeMatrix(double **mat, int n)
 	}
 }
 
-
+// Обчислення детермінанту за методом Гаусса
 double ComputeDeterminant(double **mat, int n)
 {
 	double **A = CopyMatrix(mat, n);
@@ -57,7 +62,7 @@ double ComputeDeterminant(double **mat, int n)
 
 	for (int i = 0; i < n; i++)
 	{
-	
+		// Пошук ведучого елементу
 		int pivot = i;
 		for (int j = i + 1; j < n; j++)
 		{
@@ -72,7 +77,7 @@ double ComputeDeterminant(double **mat, int n)
 			return det;
 		}
 
-		
+		// Обмін рядків
 		if (pivot != i)
 		{
 			sign *= -1;
@@ -83,7 +88,7 @@ double ComputeDeterminant(double **mat, int n)
 
 		det *= A[i][i];
 
-	
+		// Гауссівське виключення
 		for (int j = i + 1; j < n; j++)
 		{
 			double factor = A[j][i] / A[i][i];
@@ -103,7 +108,7 @@ bool ReadMatrixFromClipboard(HWND hWnd)
 	if (!GetTextFromClipboard(hWnd, buffer, sizeof(buffer)))
 		return false;
 
-	
+	// Парсити буфер
 	int offset = 0;
 	if (sscanf_s(buffer, "%d", &g_nSize) != 1)
 		return false;
@@ -111,7 +116,7 @@ bool ReadMatrixFromClipboard(HWND hWnd)
 	if (g_nSize < 1 || g_nSize > 100)
 		return false;
 
-	
+	// Алокувати матрицю
 	if (g_matrix)
 		FreeMatrix(g_matrix, g_nSize);
 
@@ -119,12 +124,12 @@ bool ReadMatrixFromClipboard(HWND hWnd)
 	for (int i = 0; i < g_nSize; i++)
 		g_matrix[i] = new double[g_nSize];
 
-
+	// Знайти початок даних (після першої нової лінії)
 	char *p = strchr(buffer, '\n');
 	if (!p) return false;
 	p++;
 
-
+	// Прочитати матрицю
 	for (int i = 0; i < g_nSize; i++)
 	{
 		for (int j = 0; j < g_nSize; j++)
@@ -132,25 +137,27 @@ bool ReadMatrixFromClipboard(HWND hWnd)
 			if (sscanf_s(p, "%lf", &g_matrix[i][j]) != 1)
 				return false;
 
-			
+			// Пропустити число і простір
 			while (*p && *p != ' ' && *p != '\n')
 				p++;
 			while (*p && (*p == ' '))
 				p++;
 		}
-		
+		// Перейти на наступний рядок
 		while (*p && *p != '\n')
 			p++;
 		if (*p == '\n') p++;
 	}
 
-	
+	// Обчислити детермінант
 	g_dDeterminant = ComputeDeterminant(g_matrix, g_nSize);
 
 	return true;
 }
 
-
+// ============================================================================
+// ОБРОБНИК ПОВІДОМЛЕНЬ
+// ============================================================================
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -166,12 +173,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			int wmId = LOWORD(wParam);
 
-			
+			// WM_COMMAND 10000 - повідомлення від менеджера з його HWND
 			if (wmId == 10000)
 			{
 				g_hWndManager = (HWND)lParam;
 
-				
+				// Спробувати прочитати матрицю з Clipboard
 				Sleep(500); // Дати часу на запис у Clipboard
 
 				if (ReadMatrixFromClipboard(hWnd))
@@ -262,7 +269,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-
+// ============================================================================
+// ТОЧКА ВХОДУ
+// ============================================================================
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
 				   LPSTR lpCmdLine, int nCmdShow)
